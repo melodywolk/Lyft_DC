@@ -20,6 +20,10 @@ for i in range(len(tableau20)):
     r, g, b = tableau20[i]    
     tableau20[i] = (r / 255., g / 255., b / 255.)    
 
+"""
+Some exploratory analysis
+"""
+
 rides = pd.read_csv('rides.csv')
 rides.head()
 rides.describe()
@@ -44,7 +48,7 @@ plt.show()
 # Some rides have negative duration time which is weird
 print 1.*len(rides[rides['duration_secs']<0])/len(rides)
 
-# However it is only a tiny fraction of the data so we can remove these points
+# However there is only a tiny fraction of the data so we can remove these points
 
 # What is the minimum time in seconds if we exclude rides that have negative duration?
 clean = rides[rides['duration_secs']>0]
@@ -59,6 +63,11 @@ plt.hist(rides2['duration_secs'])
 plt.show()
 
 print len(rides2)
+
+"""
+We want the routes that maximize the total number of expected passenger rides.
+One approach is to identify the location of traveling spots as most of the passengers are expected to travel between them.
+"""
 # To get a sense of the hot spots we restrict the dataset to one day for plotting purposes
 
 one_day = rides2[0:1000]
@@ -81,7 +90,7 @@ print np.median(one_day['start_lat']), np.median(one_day['start_lng'])
 #map.create_map(path='pickups.html')
 
 
-# #### The data are located in New York. Let's overplot some well-known destinations to get a sense of the hot spots
+#### The data are located in New York. Let's overplot some well-known destinations to get a sense of the hot spots
 
 # Times Square
 times_square = [40.75773, -73.985708]
@@ -138,6 +147,8 @@ pickup_data.head()
 print min(pickup_data['start_lat']), max(pickup_data['start_lat']), min(pickup_data['start_lng']), max(pickup_data['start_lng'])
 
 xpickup_data = np.array(pickup_data)
+
+#### We want to know how many clusters do we need
 
 k_range = range(1, 10)
 k_means_var = [KMeans(n_clusters=k).fit(xpickup_data) for k in k_range]
@@ -241,11 +252,17 @@ new_data['drop_labels'] = k_drops.labels_
 center_pickups = k_picks.cluster_centers_
 center_dropoffs = k_drops.cluster_centers_
 
+#### We define the Manhattan distance
+
 def manhattan_distance(x1, x2, y1, y2):
     alpha = 84.2
     beta = 111.2
     dis = alpha*np.abs(x1-x2) + beta*np.abs(y1-y2)
     return dis
+
+
+
+#### By calculating the route probability using the true pickup/dropoff location as the cluster's center, we extract the most probable routes
 
 final = {}
 for nx in range(5):
